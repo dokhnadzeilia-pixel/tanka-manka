@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>/// TANK_ENGINE_v2.0 ///</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+       
+        body { 
+            background: #050505; 
+            color: #00ff33; 
+            font-family: 'Courier New', Courier, monospace; 
+            padding: 30px; 
+            margin: 0;
+        }
+        
+        .terminal-container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            border: 1px dashed #00ff33; 
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 51, 0.2);
+        }
+
+        h1 {
+            font-size: 18px;
+            text-align: center;
+            margin-top: 0;
+            border-bottom: 1px dashed #00ff33;
+            padding-bottom: 10px;
+        }
+
+        .metric-row {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        pre { 
+            background: #001100; 
+            padding: 15px; 
+            border: 1px solid #00ff33; 
+            color: #00ff33; 
+            font-family: monospace; 
+            line-height: 1.4;
+        }
+
+        textarea { 
+            width: 100%; 
+            background: #000; 
+            color: #00ff33; 
+            font-family: monospace; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            border: 1px solid #00ff33;
+            margin-top: 5px;
+            outline: none;
+        }
+        
+        /* Symbolic Buttons */
+        button { 
+            background: #002200;
+            color: #00ff33;
+            border: 1px solid #00ff33;
+            padding: 10px; 
+            margin: 8px 0; 
+            width: 100%; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-family: 'Courier New', monospace;
+        }
+        button:hover {
+            background: #00ff33;
+            color: #000;
+        }
+        button:disabled {
+            border-color: #003300;
+            color: #003300;
+            background: transparent;
+            cursor: not-allowed;
+        }
+
+        #terminal-log { 
+            background: #000; 
+            color: #00aa22; 
+            padding: 10px; 
+            height: 100px; 
+            overflow-y: auto; 
+            font-family: monospace; 
+            font-size: 12px;
+            border: 1px solid #003300;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="terminal-container">
+        <h1>[/// 1v1_MATRIX_TANK_CORE ///]</h1>
+        
+        <div class="metric-row">@USER_ID: <span id="my-role">&lt;...&gt;</span></div>
+        <div class="metric-row">[!] ACTIVE_P_TURN: P//<span id="active-p">-</span></div>
+        <div class="metric-row">[#] ACTION_POINTS: <span id="ap-left">0</span></div>
+        
+        <p style="margin-bottom: 2px; font-size: 12px;">&gt;&gt; TELEMETRY_MATRIX:</p>
+        <pre id="tank-data">[...] awaiting sync link</pre>
+
+        <button id="spin" onclick="sendSpin()">[O] SPIN_WHEEL_INIT</button>
+        
+        <textarea id="code" rows="5" placeholder="// execute_stream:&#10;move(2);&#10;turnRight();&#10;shoot();"></textarea>
+        
+        <button id="run" onclick="sendCode()">[&gt;&gt;] COMPILE_AND_RUN</button>
+
+        <p style="margin: 15px 0 2px 0; font-size: 12px;">&gt;&gt; CONSOLE_OUTPUT:</p>
+        <div id="terminal-log"></div>
+    </div>
+
+    <script>
+        const socket = io();
+        let myRole = null;
+        
+        // Direction icons used instead of words
+        const dirSymbols = ["▲ (UP)", "► (RIGHT)", "▼ (DOWN)", "◄ (LEFT)"];
+
+        socket.on('assignPlayer', (role) => {
+            myRole = role;
+            document.getElementById('my-role').innerText = role === 'spectator' ? "[SPECTATOR]" : `[PLAYER_0${role}]`;
+        });
+
+        socket.on('stateUpdate', (state) => {
+            document.getElementById('active-p').innerText = state.activePlayer;
+            document.getElementById('ap-left').innerText = state.points;
+
+            let p1 = state.tanks[1];
+            let p2 = state.tanks[2];
+            
+            // Output using brackets and grid symbols
+            document.getElementById('tank-data').innerText = 
+                `P_01 :: STATUS:[${p1.alive ? "ALIVE" : "DEAD"}] :: COORDS:[X:${p1.x}, Y:${p1.y}] :: DIR:[${dirSymbols[p1.dir]}]\n` +
+                `P_02 :: STATUS:[${p2.alive ? "ALIVE" : "DEAD"}] :: COORDS:[X:${p2.x}, Y:${p2.y}] :: DIR:[${dirSymbols[p2.dir]}]`;
+
+            let isMyTurn = (myRole === state.activePlayer);
+            document.getElementById('spin').disabled = !isMyTurn || state.wheelSpun;
+            document.getElementById('run').disabled = !isMyTurn || !state.wheelSpun;
+        });
+
+        socket.on('log', (message) => {
+            let logDiv = document.getElementById('terminal-log');
+            logDiv.innerHTML += `&gt; ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight; 
+        });
+
+        function sendSpin() { socket.emit('spinWheel'); }
+        function sendCode() {
+            let text = document.getElementById('code').value;
+            socket.emit('submitCode', text);
+        }
+    </script>
+</body>
+</html>
