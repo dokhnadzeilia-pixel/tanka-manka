@@ -97,7 +97,6 @@ io.on('connection', (socket) => {
 
     
     socket.on('disconnect', () => {
-        socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
         let pId = Object.keys(players).find(key => players[key] === socket.id);
         if (pId) {
