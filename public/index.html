@@ -5,6 +5,51 @@
     <title>/// TANK_ENGINE_v2.0 ///</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
+
+    
+#grid-container {
+    display: grid;
+    grid-template-columns: repeat(10, 40px);
+    grid-template-rows: repeat(10, 40px);
+    gap: 2px;
+    background-color: #333;
+    padding: 5px;
+    width: fit-content;
+    margin: 20px auto;
+    border-radius: 8px;
+}
+
+/* გრიდი */
+.cell {
+    background-color: #222;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    user-select: none;
+}
+
+
+.tank-p1 {
+    color: #3498db; /* ლურჯი ტანკი */
+    text-shadow: 0 0 10px #3498db;
+    transform-origin: center;
+}
+
+.tank-p2 {
+    color: #e74c3c; /* წითელი ტანკი */
+    text-shadow: 0 0 10px #e74c3c;
+    transform-origin: center;
+}
+
+
+.dead-tank {
+    color: #555 !important;
+    text-shadow: none !important;
+}
        
         body { 
             background: #050505; 
@@ -103,6 +148,7 @@
         
         <p style="margin-bottom: 2px; font-size: 12px;">&gt;&gt; TELEMETRY_MATRIX:</p>
         <pre id="tank-data">[...] awaiting sync link</pre>
+        <div id="grid-container"></div>
 
         <button id="spin" onclick="sendSpin()">[O] SPIN_WHEEL_INIT</button>
         
@@ -126,22 +172,64 @@
             document.getElementById('my-role').innerText = role === 'spectator' ? "[SPECTATOR]" : `[PLAYER_0${role}]`;
         });
 
-        socket.on('stateUpdate', (state) => {
-            document.getElementById('active-p').innerText = state.activePlayer;
-            document.getElementById('ap-left').innerText = state.points;
+      socket.on('stateUpdate', (state) => {
+    
+    document.getElementById('active-p').innerText = state.activePlayer;
+    document.getElementById('ap-left').innerText = state.points;
 
-            let p1 = state.tanks[1];
-            let p2 = state.tanks[2];
-            
-            // Output using brackets and grid symbols
-            document.getElementById('tank-data').innerText = 
-                `P_01 :: STATUS:[${p1.alive ? "ALIVE" : "DEAD"}] :: COORDS:[X:${p1.x}, Y:${p1.y}] :: DIR:[${dirSymbols[p1.dir]}]\n` +
-                `P_02 :: STATUS:[${p2.alive ? "ALIVE" : "DEAD"}] :: COORDS:[X:${p2.x}, Y:${p2.y}] :: DIR:[${dirSymbols[p2.dir]}]`;
+    let p1 = state.tanks[1];
+    let p2 = state.tanks[2];
 
-            let isMyTurn = (myRole === state.activePlayer);
-            document.getElementById('spin').disabled = !isMyTurn || state.wheelSpun;
-            document.getElementById('run').disabled = !isMyTurn || !state.wheelSpun;
-        });
+    
+    const tankDataEl = document.getElementById('tank-data');
+    if (tankDataEl) {
+        tankDataEl.innerText = 
+            `P_01 :: STATUS:[${p1.alive ? "ALIVE" : "DEAD"}] :: COORDS:[X:${p1.x}, Y:${p1.y}] :: DIR:${p1.dir}\n` +
+            `P_02 :: STATUS:[${p2.alive ? "ALIVE" : "DEAD"}] :: COORDS:[X:${p2.x}, Y:${p2.y}] :: DIR:${p2.dir}`;
+    }
+
+    
+    let isMyTurn = (myRole === state.activePlayer);
+    document.getElementById('spin').disabled = !isMyTurn || state.wheelSpun;
+    document.getElementById('run').disabled = !isMyTurn || !state.wheelSpun;
+
+    
+    const gridContainer = document.getElementById('game-grid');
+    gridContainer.innerHTML = ''; 
+
+   
+    for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+
+           
+            if (p1 && p1.x === x && p1.y === y) {
+                cell.innerHTML = getTriangleSymbol(p1.dir);
+                cell.classList.add('tank-player1');
+                if (!p1.alive) cell.classList.add('tank-dead');
+            } 
+           
+            else if (p2 && p2.x === x && p2.y === y) {
+                cell.innerHTML = getTriangleSymbol(p2.dir);
+                cell.classList.add('tank-player2');
+                if (!p2.alive) cell.classList.add('tank-dead');
+            }
+
+            gridContainer.appendChild(cell);
+        }
+    }
+});
+
+
+function getTriangleSymbol(dir) {
+    
+    if (dir === 0) return '▲';
+    if (dir === 1) return '▶';
+    if (dir === 2) return '▼';
+    if (dir === 3) return '◀';
+    return '▲';
+}
 
         socket.on('log', (message) => {
             let logDiv = document.getElementById('terminal-log');
