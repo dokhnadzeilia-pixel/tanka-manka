@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
     });
 
     
-socket.on('disconnect', () => {
+    socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
         let pId = Object.keys(players).find(key => players[key] === socket.id);
         if (pId) {
@@ -114,6 +114,8 @@ socket.on('disconnect', () => {
             gameState.tanks[2] = { x: 8, y: 8, dir: 3, alive: true };
         }
     }); 
+}); // 🌟 აი ეს ფრჩხილი აკლდა შენს კოდში, რომელიც ხურავს მთლიან io.on('connection')-ს!
+
 function executeQueue(pId, queue) {
 
     if (queue.length === 0 || gameState.points <= 0 || !gameState.tanks[1].alive || !gameState.tanks[2].alive) {
@@ -170,7 +172,8 @@ function executeQueue(pId, queue) {
     setTimeout(() => executeQueue(pId, queue), 500);
 }
 
-
-server.listen(3000, () => {
-    console.log('Backend Game Server listening smoothly on http://localhost:3000');
+// 🌟 Render-ისთვის პორტი უნდა იყოს დინამიური
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Backend Game Server listening smoothly on port ${PORT}`);
 });
