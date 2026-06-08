@@ -6,51 +6,51 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
 
-    
-#grid-container {
+   
+#game-grid {
     display: grid;
-    grid-template-columns: repeat(10, 40px);
-    grid-template-rows: repeat(10, 40px);
-    gap: 2px;
-    background-color: #333;
-    padding: 5px;
+    grid-template-columns: repeat(10, 45px);
+    grid-template-rows: repeat(10, 45px);
+    gap: 3px;
+    background-color: #2c3e50;
+    padding: 8px;
     width: fit-content;
     margin: 20px auto;
     border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
-/* გრიდი */
-.cell {
-    background-color: #222;
-    border: 1px solid #444;
+
+.grid-cell {
+    background-color: #1a252f;
+    border: 1px solid #34495e;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 26px; 
     font-weight: bold;
-    color: #fff;
     user-select: none;
+    transition: background-color 0.2s;
 }
 
 
-.tank-p1 {
-    color: #3498db; /* ლურჯი ტანკი */
+.tank-player1 {
+    color: #3498db;
     text-shadow: 0 0 10px #3498db;
-    transform-origin: center;
 }
 
-.tank-p2 {
-    color: #e74c3c; /* წითელი ტანკი */
+
+.tank-player2 {
+    color: #e74c3c;
     text-shadow: 0 0 10px #e74c3c;
-    transform-origin: center;
 }
 
 
-.dead-tank {
-    color: #555 !important;
+.tank-dead {
+    color: #7f8c8d !important;
     text-shadow: none !important;
 }
-       
+
         body { 
             background: #050505; 
             color: #00ff33; 
@@ -101,7 +101,7 @@
             outline: none;
         }
         
-        /* Symbolic Buttons */
+      
         button { 
             background: #002200;
             color: #00ff33;
