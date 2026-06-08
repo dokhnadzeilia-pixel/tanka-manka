@@ -97,16 +97,24 @@ io.on('connection', (socket) => {
 
     
     socket.on('disconnect', () => {
+        socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
         let pId = Object.keys(players).find(key => players[key] === socket.id);
         if (pId) {
             delete players[pId];
             console.log(`Player ${pId} slot freed up.`);
         }
+
+        // თუ არცერთი მოთამაშე აღარ არის სერვერზე, განულდეს თამაში
+        if (Object.keys(players).length === 0) {
+            console.log("All players left. Resetting game state...");
+            gameState.activePlayer = 1;
+            gameState.points = 0;
+            gameState.wheelSpun = false;
+            gameState.tanks[1] = { x: 1, y: 1, dir: 1, alive: true };
+            gameState.tanks[2] = { x: 8, y: 8, dir: 3, alive: true };
+        }
     });
-});
-
-
 function executeQueue(pId, queue) {
 
     if (queue.length === 0 || gameState.points <= 0 || !gameState.tanks[1].alive || !gameState.tanks[2].alive) {
